@@ -46,3 +46,9 @@ def answer(question):
 
     # Run initialized chain with notion, slack and web results as given context
     return chain.run(question=question, notion=result_notion, slack=result_slack, web=result_web)
+
+
+if __name__ == "__main__":
+    while True:
+        question = input()
+        print(answer(question))
