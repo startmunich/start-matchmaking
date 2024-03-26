@@ -2,9 +2,8 @@ import logging
 
 from dotenv import load_dotenv
 from langchain.chains import LLMChain
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
-
 
 # Global variables and module initialization
 
@@ -16,39 +15,32 @@ load_dotenv()
 
 # Initialize model
 # TODO: Migrate to more affordable model
+
 llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
-
 # Initialize prompt template
-prompt_template = """ 
-It is December 2023. You are StartGPT, an assistant for question-answering tasks. Users reach out to you only via Slack. You serve a student led organization START Munich. The context you get will be from our Notion and/or Slack, and/or our Website. Use the following pieces of retrieved context to answer the question. You can use either one of the sources (context) or combine them. You decide what's more useful. If you don't know the answer, just say that you don't know.
-Question: {question}
-Notion result: {notion} 
-Slack result: {slack}
-Website result: {web}
+# Wie iniziieren wir den prompt? "Hallo"
+# prompt: frage folgenden Dinge ab und speichere sie als json datei
 
-You don't need to mention where you got the information from.
+# langchain doku: wie können wir stoppen nachdem json erkannt wurde
+
+prompt_template = """
+This is the users answer: {user_input}
 """
 
 # Initialize prompt
-prompt = PromptTemplate(input_variables=["question", "notion", "slack", "web"], template=prompt_template)
+prompt = PromptTemplate(input_variables=["user_input"], template=prompt_template)
 
 # Initialize chain
 chain = LLMChain(llm=llm, prompt=prompt)
 
-
 # Answer question
-def answer(question):
-    logger.info(f"answer | {question}")
-
-    result_notion = ""
-    result_slack = ""
-    result_web = ""
+def answer(user_input):
+    logger.info(f"answer | {user_input}")
 
     # Run initialized chain with notion, slack and web results as given context
-    return chain.run(question=question, notion=result_notion, slack=result_slack, web=result_web)
-
+    return chain.invoke({"user_input": user_input}).get("text")
 
 if __name__ == "__main__":
     while True:
-        question = input()
-        print(answer(question))
+        user_input = input()
+        print(answer(user_input))
