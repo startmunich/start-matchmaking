@@ -60,7 +60,7 @@ mode = "Are you looking for a specific Startie, Expertise, Industry Background o
 
 
 user_prompt = """
-This is the previous question you askes: {recent_question}
+This is the previous question you asked: {recent_question}
 This is the user's response: {recent_response}
 
 Check whether the user response answers your question sufficiently. In this case, only give a short "YES" in response.
