@@ -1,46 +1,16 @@
-import logging
+# This is a sample Python script.
 
-from dotenv import load_dotenv
-from langchain.chains import LLMChain
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
+# Press ⌃R to execute it or replace it with your code.
+# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
-# Global variables and module initialization
 
-# Initialize logger
-logger = logging.getLogger('start_gpt')
+def print_hi(name):
+    # Use a breakpoint in the code line below to debug your script.
+    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
 
-# Read .env file
-load_dotenv()
 
-# Initialize model
-# TODO: Migrate to more affordable model
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    print_hi('PyCharm')
 
-llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
-# Initialize prompt template
-# Wie iniziieren wir den prompt? "Hallo"
-# prompt: frage folgenden Dinge ab und speichere sie als json datei
-
-# langchain doku: wie können wir stoppen nachdem json erkannt wurde
-
-prompt_template = """
-This is the users answer: {user_input}
-"""
-
-# Initialize prompt
-prompt = PromptTemplate(input_variables=["user_input"], template=prompt_template)
-
-# Initialize chain
-chain = LLMChain(llm=llm, prompt=prompt)
-
-# Answer question
-def answer(user_input):
-    logger.info(f"answer | {user_input}")
-
-    # Run initialized chain with notion, slack and web results as given context
-    return chain.invoke({"user_input": user_input}).get("text")
-
-if __name__ == "__main__":
-    while True:
-        user_input = input()
-        print(answer(user_input))
+# See PyCharm help at https://www.jetbrains.com/help/pycharm/
