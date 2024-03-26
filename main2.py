@@ -56,3 +56,13 @@ third_question = input("On a scale from 1-10, how would you rate your Expertise 
 # CODE when using find a Startie for second time (or after first questions)
 mode = "Are you looking for a specific Startie, Expertise, Industry Background or anything else?"
 # wie dynamisch können wir hier die Konversation laufen lassen und jeweils die Datenbank nach jeder anfrage checken lassen?
+
+
+
+user_prompt = """
+This is the previous question you askes: {recent_question}
+This is the user's response: {recent_response}
+
+Check whether the user response answers your question sufficiently. In this case, only give a short "YES" in response.
+If the question is not answered at all or is completely incomprehensible, formulate an alternative answer that follows up and clarifies open questions.
+"""
