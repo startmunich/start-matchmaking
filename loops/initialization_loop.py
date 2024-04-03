@@ -1,6 +1,9 @@
 from langchain.chains.llm import LLMChain
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from services import chat_service
 
@@ -24,7 +27,7 @@ Check whether the user response answers your question sufficiently. In this case
 If the question is not answered at all or is completely incomprehensible, formulate an alternative answer that follows up and clarifies open questions.
 """
 
-check_prompt = PromptTemplate.from_template(input_variables=["recent_question", "recent_response"], template=check_prompt_template)
+check_prompt = PromptTemplate.from_template(template=check_prompt_template)
 
 # Initialize model and chain
 llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
@@ -36,11 +39,8 @@ def run():
 
     counter = 0
 
-    while True:
+    while counter < 3:
         recent_question = questions[counter]
         recent_answer = chat_service.get_answer(recent_question)
-
-        print(chain.invoke({"recent_question": recent_question, "recent_answer": recent_answer}))
-
-
-
+        counter += 1
+        print(chain.invoke({"recent_question": recent_question, "recent_response": recent_answer}))
