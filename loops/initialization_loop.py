@@ -3,10 +3,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
+from services import cli_service
+
 load_dotenv(override=True)
-
-from services import chat_service
-
 
 initialization_message = """Initialising Starties looking for Starties Programm... \n
 Hi there 🙋‍♀️, looks like you are using me for the first time. I would love to get to know you a little before I can match potentially helpful people for you (because you might be helpful to others 😉).
@@ -34,19 +33,28 @@ llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
 chain = LLMChain(llm=llm, prompt=check_prompt)
 
 
-def run():
-    chat_service.write_message(initialization_message)
+counter = -1
 
-    counter = 0
 
-    while counter < len(questions):
-        recent_question = questions[counter]
-        recent_answer = chat_service.get_answer(recent_question)
-        response = chain.invoke({"recent_question": recent_question, "recent_response": recent_answer})
-        text = response["text"]
-        counter += 1
-        #print(text)
-        if text.upper() == "YES":
-            print("Let's move on.")
-        else:
-            questions.insert(counter, text)
+def on_message(recent_question, recent_answer, say):
+    global counter
+    next_question = None
+
+    if counter == -1:
+        say(initialization_message)
+        counter = 0
+
+    elif recent_question and recent_answer:
+        text = chain.invoke({"recent_question": recent_question, "recent_response": recent_answer})["text"]
+
+        if text.upper() != "YES":
+            questions.insert(counter + 1, text)
+
+    if counter < len(questions):
+        next_question = questions[counter]
+        say(next_question)
+
+    counter += 1
+    return next_question
+
+
