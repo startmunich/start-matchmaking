@@ -54,6 +54,7 @@ def on_message(recent_question, recent_answer, say):
     if counter == 0:
         say(initialization_message)
 
+    # If recent question and recent answer given, run chain (using check_prompt)
     elif recent_question and recent_answer:
         # Get response from chain (using check_prompt) -> either a follow-up question or a "YES"
         text = chain.invoke({"recent_question": recent_question, "recent_response": recent_answer})["text"]
