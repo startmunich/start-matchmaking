@@ -24,7 +24,7 @@ This is the previous question you asked: {recent_question}
 This is the user's response: {recent_response}
 
 Check whether the user response answers your question sufficiently. In this case, only give a short "YES" in response.
-If the question is not answered at all or is completely incomprehensible, formulate an alternative answer that follows up and clarifies open questions.
+If the question is not answered at all or is completely incomprehensible, formulate an alternative answer that follows up and clarifies open questions. In this case only answer with your follow up question. Do not stop the conversation flow.
 """
 
 check_prompt = PromptTemplate.from_template(template=check_prompt_template)
@@ -39,8 +39,14 @@ def run():
 
     counter = 0
 
-    while counter < 3:
+    while counter < len(questions):
         recent_question = questions[counter]
         recent_answer = chat_service.get_answer(recent_question)
+        response = chain.invoke({"recent_question": recent_question, "recent_response": recent_answer})
+        text = response["text"]
         counter += 1
-        print(chain.invoke({"recent_question": recent_question, "recent_response": recent_answer}))
+        #print(text)
+        if text.upper() == "YES":
+            print("Let's move on.")
+        else:
+            questions.insert(counter, text)
