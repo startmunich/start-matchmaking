@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 from services import chat_service
 
