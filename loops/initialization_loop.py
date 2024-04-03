@@ -9,7 +9,7 @@ from services import chat_service
 
 
 initialization_message = """Initialising Starties looking for Starties Programm... \n
-Hi there 🙋‍♀️, looks like you are using me for the first time. I would love to get to know you a little before I can match potentially helpful people for you (because you might be helpful to others 😉)."
+Hi there 🙋‍♀️, looks like you are using me for the first time. I would love to get to know you a little before I can match potentially helpful people for you (because you might be helpful to others 😉).
 """
 
 questions = [
