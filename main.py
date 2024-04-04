@@ -1,4 +1,4 @@
-from loops import initialization_loop
+from services import slack_service
 
 if __name__ == '__main__':
-    initialization_loop.run()
+    slack_service.start()
