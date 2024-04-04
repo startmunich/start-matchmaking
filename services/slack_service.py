@@ -9,6 +9,7 @@ load_dotenv(override=True)
 # Install the Slack app and get xoxb- token in advance
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
+
 @app.event("app_mention")
 def event_test(event, say):
     user = event["user"]
@@ -18,5 +19,11 @@ def event_test(event, say):
     print("Received Message\n | channel: " + channel + ", user: " + user + ", text: " + text)
 
 
-if __name__ == "__main__":
+@app.message()
+def on_message(message, say):
+    user = message["user"]
+    say(f"Hi there, <@{user}>!")
+    
+
+def start():
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
