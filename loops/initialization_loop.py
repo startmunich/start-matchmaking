@@ -29,11 +29,15 @@ Check whether the user response answers your question sufficiently. In this case
 If the question is not answered at all or is completely incomprehensible, only answer with a follows up question for clarification.
 """
 
-#TODO make prompt good
+#TODO: Give the context of the questions (e.g. what the last number will mean)
 json_prompt_template = """
-These are answers given by … {user_responses}
-Output them in JSON format with the following keys: "Skills, Projects, …"
-Use the information dynamically to fill the values.
+I give you a list of questions and a list of answers from a conversation with a matchmaking bot trying to get information about expertise of potential matches:
+These are the questions: {questions}
+These are answers: {user_responses}
+
+Output a JSON format with the following keys: "skills, projects, expertise_level"
+Use the information from the user responses in context with the questions dynamically to fill the values.
+For skills name brief key words. For projects a more detailed description. And for expertise_level just one word, either: "Novice; Advanced Beginner; Competent; Proficient; Expert" (Expertise levels in ascending order).
 """
 
 
@@ -46,7 +50,7 @@ json_prompt = PromptTemplate.from_template(template=json_prompt_template)
 llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
 
 chain = LLMChain(llm=llm, prompt=check_prompt)
-chain = LLMChain(llm=llm, prompt=json_prompt)
+chain_two = LLMChain(llm=llm, prompt=json_prompt)
 
 conversation_data = {
     "questions": [],
@@ -59,6 +63,8 @@ counter = 0
 
 def on_message(user_id, recent_question, recent_answer, say):
     global counter
+    global chain
+
     next_question = None
 
     # If counter is 0 (initial state), say initialization message
@@ -86,12 +92,16 @@ def on_message(user_id, recent_question, recent_answer, say):
     else:
         # If no more questions available, say "Thank you for your time" and print conversation_data
         say("Thank you for your time! Your user is not set up to be matched to.")
+        print("This is the conversation data:\n")
         print(conversation_data)
-        json_formated_data = chain.invoke({"user_resppones": user_responses})
 
         # TODO: Create a new summary chain to summarize the conversation_data; done
-        # TODO: add this new summary chain to the DB instead of conversation
-        db_service.add_user_by_conversation(_id=user_id, user_responses=json_formated_data)
+        json_formated_data = chain_two.invoke({"user_responses": conversation_data["user_responses"], "questions": conversation_data["questions"]})
+
+        print("\nThis will be added to the db:\n")
+        print(json_formated_data)
+        # TODO: add this new summary chain to the DB instead of conversation; done
+        db_service.add_user_by_conversation(_id=user_id, user_responses=[json_formated_data])
 
 
     # Increment counter and return next question
