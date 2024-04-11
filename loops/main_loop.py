@@ -9,4 +9,5 @@ def on_message(message, say):
     global recent_question
 
     recent_response = message["text"]
-    recent_question = initialization_loop.on_message(recent_question, recent_response, say)
+    user_id = message["user"]
+    recent_question = initialization_loop.on_message(user_id, recent_question, recent_response, say)

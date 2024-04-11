@@ -3,6 +3,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
+from services import db_service
+
 load_dotenv(override=True)
 
 initialization_message = """Initialising Starties looking for Starties Programm... \n
@@ -46,7 +48,7 @@ conversation_data = {
 counter = 0
 
 
-def on_message(recent_question, recent_answer, say):
+def on_message(user_id, recent_question, recent_answer, say):
     global counter
     next_question = None
 
@@ -72,6 +74,15 @@ def on_message(recent_question, recent_answer, say):
     if counter < len(questions):
         next_question = questions[counter]
         say(next_question)
+    else:
+        # If no more questions available, say "Thank you for your time" and print conversation_data
+        say("Thank you for your time")
+        print(conversation_data)
+
+        # TODO: Create a new summary chain to summarize the conversation_data
+        db_service.add_user_by_conversation(_id=user_id, user_responses=conversation_data["user_responses"])
+
+
 
     # Increment counter and return next question
     counter += 1
