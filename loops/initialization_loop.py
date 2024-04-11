@@ -96,7 +96,7 @@ def on_message(user_id, recent_question, recent_answer, say):
         print(conversation_data)
 
         # TODO: Create a new summary chain to summarize the conversation_data; done
-        json_formated_data = chain_two.invoke({"user_responses": conversation_data["user_responses"], "questions": conversation_data["questions"]})
+        json_formated_data = chain_two.invoke({"user_responses": conversation_data["user_responses"], "questions": conversation_data["questions"]})["text"]
 
         print("\nThis will be added to the db:\n")
         print(json_formated_data)
