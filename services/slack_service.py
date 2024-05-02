@@ -26,6 +26,7 @@ def on_message(message, say):
 
     if "url_private_download" in message["files"][0]:
         print("URL Private:", url_private_download)
+        main_loop.on_message(message, say)
         db_service.add_user_by_cv(_id=user_id, cv_path=url_private_download)
         
 

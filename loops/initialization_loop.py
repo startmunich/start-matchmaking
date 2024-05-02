@@ -17,7 +17,8 @@ questions = [
     # (May have to do with start-ups or may not)
     "Please elaborate a little on projects or experiences in which you have already applied or built up this expertise.",
     # missing: gehe bitte noch auf tools, programme, hard skills ein, oder auch soft skills ein, die du im Zuge dessen verwendest hast
-    "On a scale from 1-10, how would you rate your expertise in this field?"
+    "On a scale from 1-10, how would you rate your expertise in this field?",
+    "If you want, you can now upload your CV as a PDF, so we have more complete information on your profile."
 ]
 
 
@@ -91,7 +92,7 @@ def on_message(user_id, recent_question, recent_answer, say):
         say(next_question)
     else:
         # If no more questions available, say "Thank you for your time" and print conversation_data
-        say("Thank you for your time! Your user is not set up to be matched to.")
+        say("Thank you for your time! Your user is now set up to be matched to.")
         print("This is the conversation data:\n")
         print(conversation_data)
 
