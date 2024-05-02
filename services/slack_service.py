@@ -13,14 +13,16 @@ load_dotenv(override=True)
 app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 
+@app.message()
+def on_message(message, say):
+    main_loop.on_message(message, say)
+
 
 @app.event("message")
 def on_message(message, say):
     print("message event handler: ", message)
     user_id = message["user"]
     url_private_download = message["files"][0]["url_private_download"]
-
-    main_loop.on_message(message, say)
 
     if "url_private_download" in message["files"][0]:
         print("URL Private:", url_private_download)
