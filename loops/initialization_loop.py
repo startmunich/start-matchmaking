@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
+from loops import looking_for_starties_loop
 from services import db_service
 
 load_dotenv(override=True)
@@ -61,7 +62,6 @@ conversation_data = {
 
 counter = 0
 
-
 def on_message(user_id, recent_question, recent_answer, say):
     global counter
     global chain
@@ -71,6 +71,8 @@ def on_message(user_id, recent_question, recent_answer, say):
     # If counter is 0 (initial state), say initialization message
     if counter == 0:
         say(initialization_message)
+        # Test
+        next_question = questions[counter]
 
     # If recent question and recent answer given, run chain (using check_prompt)
     elif recent_question and recent_answer:
@@ -85,6 +87,7 @@ def on_message(user_id, recent_question, recent_answer, say):
         # Check if respnoses is "YES" -> if not, insert the follow-up question into the questions list
         if text.upper() != "YES":
             questions.insert(counter, text)
+
 
     # If questions available, ask next question
     if counter < len(questions):
@@ -104,7 +107,12 @@ def on_message(user_id, recent_question, recent_answer, say):
         # TODO: add this new summary chain to the DB instead of conversation; done
         db_service.add_user_by_conversation(_id=user_id, user_responses=[json_formated_data])
 
+        # looking_for_starties_loop.on_message(user_id, recent_question, recent_answer, say)
+
 
     # Increment counter and return next question
     counter += 1
     return next_question
+
+
+    
