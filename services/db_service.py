@@ -21,7 +21,7 @@ NEO4J_URI = os.environ.get("NEO4J_URI")
 NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
 
-# Specifies the path of the Chroma vector database, init .db
+# Initialize the Neo4jVector store
 store = Neo4jVector.from_existing_graph(
     embedding=OpenAIEmbeddings(),
     url=NEO4J_URI,
@@ -34,6 +34,7 @@ store = Neo4jVector.from_existing_graph(
 )
 
 
+# Create a new Startie
 def create_startie(startie):
     query = f"""
     CREATE (s:Startie {{slack_id: '{startie.slack_id}', name: '{startie.name}', skills: '{startie.skills}', cv: '{startie.cv}'}})
@@ -44,6 +45,7 @@ def create_startie(startie):
     return startie
 
 
+# Update an existing Startie
 def update_startie(startie):
     query = f"""
     MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})
@@ -54,6 +56,7 @@ def update_startie(startie):
     return startie
 
 
+# Save a Startie to the database (create or update)
 def save_startie(startie):
     if find_startie_by_id(startie.slack_id):
         return update_startie(startie)
@@ -61,6 +64,7 @@ def save_startie(startie):
         return create_startie(startie)
 
 
+# Find a Startie by their Slack ID
 def find_startie_by_id(slack_id):
     query = f"""
     MATCH (s:Startie {{slack_id: '{slack_id}'}})
@@ -73,7 +77,9 @@ def find_startie_by_id(slack_id):
     return result
 
 
-def add_user_by_cv(_id: str, cv_path: str):
+
+# Add a Startie by their CV
+def add_startie_by_cv(_id: str, cv_path: str):
     print("Inside add_user_by_cv")
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
@@ -118,6 +124,7 @@ def add_user_by_cv(_id: str, cv_path: str):
 session_store = {}
 
 
+# Get the chat history for a session
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in session_store:
         session_store[session_id] = ChatMessageHistory()

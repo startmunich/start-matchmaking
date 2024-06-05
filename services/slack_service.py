@@ -40,7 +40,7 @@ def on_message(message, say):
 
     if "url_private_download" in message["files"][0]:
         print("URL Private:", url_private_download)
-        cv_upload = db_service.add_user_by_cv(_id=user_id, cv_path=url_private_download)
+        cv_upload = db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
 
     chains.on_message(message, say, cv_upload)
 
