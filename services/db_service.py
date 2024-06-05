@@ -1,100 +1,124 @@
 from dotenv import load_dotenv
+from langchain_community.chat_message_histories.in_memory import ChatMessageHistory
+from langchain_community.vectorstores.neo4j_vector import Neo4jVector
+from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_text_splitters import CharacterTextSplitter
 import requests
 import os
 import tempfile
 
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores.chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 
+from services import slack_service
 
 # Read .env file
 load_dotenv(override=True)
 
-# Specifies the path of the Chroma vector database, init db
-db_path = "./db"
-embeddings = OpenAIEmbeddings()
-db = Chroma(persist_directory=db_path, embedding_function=embeddings, collection_name="users")
+NEO4J_URI = os.environ.get("NEO4J_URI")
+NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
 
-# Specify model
-model = ChatOpenAI(model="gpt-3.5-turbo-0125")
+# Specifies the path of the Chroma vector database, init .db
+store = Neo4jVector.from_existing_graph(
+    embedding=OpenAIEmbeddings(),
+    url=NEO4J_URI,
+    username=NEO4J_USERNAME,
+    password=NEO4J_PASSWORD,
+    index_name="startie_index",
+    node_label="Startie",
+    text_node_properties=["cv", "skills"],
+    embedding_node_property="embedding",
+)
 
-# Define custom prompt
-prompt_template = """Use the following pieces of context to answer the question at the end.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
-Use three sentences maximum and keep the answer as concise as possible.
 
-{context}
+def create_startie(startie):
+    query = f"""
+    CREATE (s:Startie {{slack_id: '{startie.slack_id}', name: '{startie.name}', skills: '{startie.skills}', cv: '{startie.cv}'}})
+    """
 
-Question: {question}
+    print("Query:", query)
+    store.query(query)
+    return startie
 
-Answer:"""
 
-# Initialize prompt
-prompt_template = PromptTemplate.from_template(prompt_template)
+def update_startie(startie):
+    query = f"""
+    MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})
+    SET s.name = '{startie.name}', s.skills = '{startie.skills}', s.cv = '{startie.cv}'
+    """
 
-llm = prompt_template | model
+    store.query(query)
+    return startie
 
-def add_user_by_conversation(_id: str, user_responses: list):
-    db.add_texts(ids=[_id], texts=[str(user_responses)], collection_name="users")
+
+def save_startie(startie):
+    if find_startie_by_id(startie.slack_id):
+        return update_startie(startie)
+    else:
+        return create_startie(startie)
+
+
+def find_startie_by_id(slack_id):
+    query = f"""
+    MATCH (s:Startie {{slack_id: '{slack_id}'}})
+    RETURN s
+    """
+
+    result = store.query(query)
+    print("Type of result:", type(result))
+    print("Result:", result)
+    return result
 
 
 def add_user_by_cv(_id: str, cv_path: str):
     print("Inside add_user_by_cv")
-    print("CV Path:", cv_path)
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
     auth_header = {'Authorization': f'Bearer {slack_bot_token}'}
 
     # Create a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
-        print("Temporary Directory Path:", temp_dir)
-        
+
         # Download PDF file to the temporary directory
         pdf_filename = cv_path.split('/')[-1]
         pdf_path = os.path.join(temp_dir, pdf_filename)
-        print("Temporary PDF Path:", pdf_path)
-        
         response = requests.get(cv_path, headers=auth_header)
-        print("Response Status Code:", response.status_code)
-        
+
         with open(pdf_path, 'wb') as f:
             f.write(response.content)
 
         # Check if the file exists at the specified path
         if os.path.exists(pdf_path):
-            print("File downloaded successfully:", pdf_path)
-            
+
             # Extract text from the downloaded PDF using Langchain PyPDF
             loader = PyPDFLoader(pdf_path)
             pages = loader.load_and_split()
             print(pages)
-            # Split extracted text into chunks
+            # Split extracted text into chunks 
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
             docs = text_splitter.split_documents(pages)
             # Extract page_content
-            # page_contents = [page.page_content for page in pages]  
+            # page_contents = [page.page_content for page in pages]
+
+            # Create a Startie object from slack_service, set cv of the startie and store in the database
+            startie = slack_service.find_startie_by_id(_id)
+            startie.cv = "\n".join([doc.page_content for doc in docs])
+            save_startie(startie)
+            return startie.cv
 
         else:
             print("Failed to download the file.")
-
-    # Add split text from CV to the Chroma database 
-    db.add_documents(documents=docs, collection_name="users")
-
-    question = input("Ask a question about the CV: ")
-
-    # Perform a similarity search based on the user's question
-    context = db.similarity_search(question)
-
-    # Get answer based on the provided context and the user's question
-    response = llm.invoke({"question": question, "context": context})
-    print("Reponse: ", response.content)
+            return None
 
 
+# Temporary session store -> in memory, replace either with Neo4j or Redis
+session_store = {}
 
 
-
-
+def get_session_history(session_id: str) -> BaseChatMessageHistory:
+    if session_id not in session_store:
+        session_store[session_id] = ChatMessageHistory()
+    return session_store[session_id]
