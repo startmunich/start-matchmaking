@@ -50,6 +50,8 @@ def route(context, config):
     elif "4" in result:
         print("route 4 -> conversation")
         return conversation_chain.invoke(context, config)
+    else:
+        print("Invalid route: ", result)
 
 
 def on_message(message, say, cv_upload=None):
