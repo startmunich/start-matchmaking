@@ -36,17 +36,20 @@ store = Neo4jVector.from_existing_graph(
 
 # Create a new Startie
 def create_startie(startie):
+    print("db_service | create_startie")
+
     query = f"""
     CREATE (s:Startie {{slack_id: '{startie.slack_id}', name: '{startie.name}', skills: '{startie.skills}', cv: '{startie.cv}'}})
     """
 
-    print("Query:", query)
     store.query(query)
     return startie
 
 
 # Update an existing Startie
 def update_startie(startie):
+    print("db_service | update_startie")
+
     query = f"""
     MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})
     SET s.name = '{startie.name}', s.skills = '{startie.skills}', s.cv = '{startie.cv}'
@@ -58,6 +61,8 @@ def update_startie(startie):
 
 # Save a Startie to the database (create or update)
 def save_startie(startie):
+    print("db_service | save_startie")
+
     if find_startie_by_id(startie.slack_id):
         return update_startie(startie)
     else:
@@ -66,21 +71,20 @@ def save_startie(startie):
 
 # Find a Startie by their Slack ID
 def find_startie_by_id(slack_id):
+    print(f"db_service | find_startie_by_id | {slack_id}")
+
     query = f"""
     MATCH (s:Startie {{slack_id: '{slack_id}'}})
     RETURN s
     """
 
     result = store.query(query)
-    print("Type of result:", type(result))
-    print("Result:", result)
     return result
-
 
 
 # Add a Startie by their CV
 def add_startie_by_cv(_id: str, cv_path: str):
-    print("Inside add_user_by_cv")
+    print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
     auth_header = {'Authorization': f'Bearer {slack_bot_token}'}
@@ -126,6 +130,8 @@ session_store = {}
 
 # Get the chat history for a session
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
+    print("db_service | get_session_history")
+
     if session_id not in session_store:
         session_store[session_id] = ChatMessageHistory()
     return session_store[session_id]

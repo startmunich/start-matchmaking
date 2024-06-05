@@ -16,6 +16,7 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 # Call the user.info method using the WebClient
 def find_startie_by_id(user_id) -> Startie:
+    print(f"slack_service | find_startie_by_id | {user_id}")
     response = app.client.users_info(user=user_id)
 
     return Startie(
@@ -26,19 +27,15 @@ def find_startie_by_id(user_id) -> Startie:
     )
 
 
-@app.message()
-def on_message(message, say):
-    chains.on_message(message, say)
-
-
 @app.event("message")
 def on_message(message, say):
-    print("message event handler: ", message)
+    print("slack_service | on_message")
+
     user_id = message["user"]
-    url_private_download = message["files"][0]["url_private_download"]
     cv_upload = None
 
-    if "url_private_download" in message["files"][0]:
+    if message.get("files", []):
+        url_private_download = message["files"][0]["url_private_download"]
         print("URL Private:", url_private_download)
         cv_upload = db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
 
@@ -47,9 +44,10 @@ def on_message(message, say):
 
 @app.event("file_shared")
 def handle_file_shared_events(body, logger):
-    # logger.info(body)
-    print("file_shared event handler: ", body)
+    print("slack_service | handle_file_shared_events")
 
 
 def start():
+    print("slack_service | start")
+
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()

@@ -1,4 +1,4 @@
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_openai import ChatOpenAI
@@ -19,7 +19,6 @@ def build_runnable(prompt):
         ) | llm | StrOutputParser(),
         get_session_history=db_service.get_session_history,
         input_messages_key="user_input",
-
         history_messages_key="history",
     )
 
@@ -58,12 +57,15 @@ def on_message(message, say, cv_upload=None):
     print("chains | on_message")
 
     user_input = message["text"] if message["text"] else None
-    user_input = user_input if user_input else cv_upload
+
+    if not user_input and cv_upload:
+        user_input = "CV uploaded"
+
 
     context = {
         "user_exists": db_service.find_startie_by_id(message["user"]) is not [],
         "user_input": user_input,
-        "cv_upload": cv_upload,
+        "cv_upload": cv_upload is not None,
         "matches": []
     }
 
@@ -73,6 +75,5 @@ def on_message(message, say, cv_upload=None):
     print("config: ", config)
 
     result = route(context, config)
-    if result:
-        print("result: ", result)
-        say(str(result))
+    if result and type(result) is str:
+        say(result)

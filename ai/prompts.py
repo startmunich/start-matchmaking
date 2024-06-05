@@ -21,6 +21,8 @@ There are some restrictions:
 - You can only update a user if cv_upload is not None
 - You can only find the best match if the query is precisely asking for skills, experience or other relevant information, not if it's just a random question or random query
 
+If you don't know what number to answer with, answer with 4. Always answer with a number from 1-4.
+
 """
 
 add_user_prompt = """
@@ -55,7 +57,7 @@ The message will be sent into Slack, therefore the first time you mention the us
 
 matches: {matches}
 
-Feel free to add emojis, but don't overdo it. Write short and concise messages.
+Feel free to add emojis, but don't overdo it. Write short and concise messages. Don't use markdown.
                                                           
 """
 
@@ -78,6 +80,7 @@ There are some restrictions:
 - You can only add a new user, if he doesn't exist yet in the system (user_exists = False)
 - You can only update a user if he exists
 - You can only update a user if he uploaded a CV
+- You don't need to update a user's profile again if he just uploaded a CV
 
 Only mention the functionality that you can use.
 

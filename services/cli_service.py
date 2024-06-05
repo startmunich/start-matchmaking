@@ -1,7 +1,9 @@
-from loops import main_loop
+from ai import chains
 
 
 def start():
+    print("cli_service | start")
+
     while True:
         question = input("Q: ")
-        main_loop.on_message({"user": "console user", "text": question}, print)
+        chains.on_message({"user": "console user", "text": question}, print)
