@@ -9,9 +9,8 @@ import tempfile
 
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
 
+from model.chunk import Chunk
 from services import slack_service
 
 # Read .env file
@@ -34,39 +33,89 @@ store = Neo4jVector.from_existing_graph(
 )
 
 
+# Create a new chunk in the database
+def create_chunk(chunk):
+    print("db_service | create_chunk")
+
+    query = f"""
+    CREATE (c:Chunk {{text: '{chunk.text}'}})
+    RETURN id(c)
+    """
+
+    return store.query(query)
+
+
+# Connect a chunk to a Startie
+def connect_chunk_to_startie(chunk_id, startie_id):
+    print(f"db_service | connect_chunk_to_startie | {chunk_id} | {startie_id}")
+
+    query = f"""
+    MATCH (c:Chunk {{id: '{chunk_id}'}})
+    MATCH (s:Startie {{id: '{startie_id}'}})
+    MERGE (c)-[:BELONGS_TO]->(s)
+    """
+
+    store.query(query)
+
+
 # Create a new Startie
-def create_startie(startie):
+def create_startie(startie, chunks):
     print("db_service | create_startie")
 
     query = f"""
-    CREATE (s:Startie {{slack_id: '{startie.slack_id}', name: '{startie.name}', skills: '{startie.skills}', cv: '{startie.cv}'}})
-    """
+        CREATE (s:Startie {{slack_id: '{startie.slack_id}', name: '{startie.name}'}})
+        RETURN id(s)
+        """
 
-    store.query(query)
-    return startie
+    startie_id = store.query(query)
+
+    for chunk in chunks:
+        chunk_id = create_chunk(chunk)
+        connect_chunk_to_startie(chunk_id, startie_id)
+
+    return startie_id
 
 
 # Update an existing Startie
-def update_startie(startie):
+def update_startie(startie, chunks):
     print("db_service | update_startie")
 
+    # Remove all existing chunks
     query = f"""
-    MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})
-    SET s.name = '{startie.name}', s.skills = '{startie.skills}', s.cv = '{startie.cv}'
+    MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})-[:BELONGS_TO]->(c:Chunk)
+    DETACH DELETE c
     """
 
-    store.query(query)
-    return startie
+    startie_id = store.query(query)
+
+    # Add new chunks to startie
+    for chunk in chunks:
+        chunk_id = create_chunk(chunk)
+        connect_chunk_to_startie(chunk_id, startie_id)
+
+    return startie_id
 
 
 # Save a Startie to the database (create or update)
-def save_startie(startie):
+def save_startie(startie, chunks):
     print("db_service | save_startie")
 
     if find_startie_by_id(startie.slack_id):
-        return update_startie(startie)
+        return update_startie(startie, chunks)
     else:
-        return create_startie(startie)
+        return create_startie(startie, chunks)
+
+
+# Find a Startie by their chunk
+def find_startie_by_chunk(chunk):
+    print(f"db_service | find_startie_by_chunk | {chunk}")
+
+    query = f"""
+    MATCH (c:Chunk {{text: '{chunk.text}'}})-[:BELONGS_TO]->(s:Startie)
+    RETURN s
+    """
+
+    return store.query(query)
 
 
 # Find a Startie by their Slack ID
@@ -78,8 +127,7 @@ def find_startie_by_id(slack_id):
     RETURN s
     """
 
-    result = store.query(query)
-    return result
+    return store.query(query)
 
 
 # Add a Startie by their CV
@@ -115,9 +163,9 @@ def add_startie_by_cv(_id: str, cv_path: str):
 
             # Create a Startie object from slack_service, set cv of the startie and store in the database
             startie = slack_service.find_startie_by_id(_id)
-            startie.cv = "\n".join([doc.page_content for doc in docs])
-            save_startie(startie)
-            return startie.cv
+            chunks = [Chunk(text=doc.page_content) for doc in docs]
+            save_startie(startie, chunks)
+            return startie
 
         else:
             print("Failed to download the file.")

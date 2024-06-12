@@ -1,6 +1,4 @@
 class Startie:
-    def __init__(self, slack_id, name, skills, cv):
+    def __init__(self, slack_id, name):
         self.slack_id = slack_id
         self.name = name
-        self.skills = skills
-        self.cv = cv
