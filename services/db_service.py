@@ -9,13 +9,10 @@ import tempfile
 
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
-<<<<<<< HEAD
-=======
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 
->>>>>>> 799966017a87821b807745524338899c6cf4e249
 
 from model.chunk import Chunk
 from services import slack_service
