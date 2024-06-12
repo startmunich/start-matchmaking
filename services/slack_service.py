@@ -21,9 +21,7 @@ def find_startie_by_id(user_id) -> Startie:
 
     return Startie(
         slack_id=response["user"]["id"],
-        name=response["user"]["real_name"],
-        skills=[],
-        cv=""
+        name=response["user"]["real_name"]
     )
 
 
