@@ -11,6 +11,8 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
+from langchain_experimental.text_splitter import SemanticChunker
+
 
 from services import slack_service
 
@@ -107,9 +109,16 @@ def add_startie_by_cv(_id: str, cv_path: str):
             loader = PyPDFLoader(pdf_path)
             pages = loader.load_and_split()
             print(pages)
+            # Combine all pages' content into a single string
+            full_text = "\n".join([page.page_content for page in pages])
+            print(full_text)
             # Split extracted text into chunks 
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-            docs = text_splitter.split_documents(pages)
+            # text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+            # docs = text_splitter.split_documents(pages)
+            text_splitter = SemanticChunker(OpenAIEmbeddings())
+            docs = text_splitter.create_documents([full_text])
+            print(docs[0].page_content)
+            print(len(docs))
             # Extract page_content
             # page_contents = [page.page_content for page in pages]
 
