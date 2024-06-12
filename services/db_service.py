@@ -1,3 +1,5 @@
+import re
+
 from dotenv import load_dotenv
 from langchain_community.chat_message_histories.in_memory import ChatMessageHistory
 from langchain_community.vectorstores.neo4j_vector import Neo4jVector
@@ -141,6 +143,26 @@ def find_startie_by_id(slack_id):
     return store.query(query)
 
 
+def sanitize_chunk(text):
+    # Escape single quotes
+    text = text.replace("'", "\\'")
+    # Escape double quotes
+    text = text.replace('"', '\\"')
+    # Escape backslashes
+    text = text.replace("\\", "\\\\")
+    # Escape newlines and carriage returns
+    text = text.replace("\n", "\\n").replace("\r", "\\r")
+    # Escape curly braces
+    text = text.replace("{", "\\{").replace("}", "\\}")
+    # Escape square brackets
+    text = text.replace("[", "\\[").replace("]", "\\]")
+    # Escape parentheses
+    text = text.replace("(", "\\(").replace(")", "\\)")
+    # Optional: Escape other characters if needed
+    text = re.sub(r'([;%$#&*])', r'\\\1', text)
+    return text
+
+
 # Add a Startie by their CV
 def add_startie_by_cv(_id: str, cv_path: str):
     print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
@@ -181,7 +203,7 @@ def add_startie_by_cv(_id: str, cv_path: str):
 
             # Create a Startie object from slack_service, set cv of the startie and store in the database
             startie = slack_service.find_startie_by_id(_id)
-            chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
+            chunks = [Chunk(text=sanitize_chunk(doc.page_content), startie_id=_id) for doc in docs]
             save_startie(startie, chunks)
             return startie
 
