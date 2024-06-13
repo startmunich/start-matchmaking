@@ -75,6 +75,10 @@ def on_message(message, say, cv_upload=None):
     print("context: ", context)
     print("config: ", config)
 
-    result = route(context, config)
-    if result and type(result) is str:
-        say(result)
+    try:
+        result = route(context, config)
+        if result and type(result) is str:
+            say(result)
+    except Exception as e:
+        print("Error: ", e)
+        say("Sorry, an error occurred. 😢 My admin has been notified.")

@@ -75,6 +75,7 @@ def create_startie(startie, chunks):
         RETURN id(s)
         """
 
+    print(query)
     result = store.query(query)
     print(f"result: {result}")
     startie_id = result[0]["id(s)"]
@@ -92,11 +93,12 @@ def update_startie(startie, chunks):
 
     # Remove all existing chunks
     query = f"""
-    MATCH (s:Startie {{slack_id: '{startie.slack_id}'}})-[:BELONGS_TO]->(c:Chunk)
+    MATCH (c:Chunk)-[:BELONGS_TO]->(s:Startie {{slack_id: '{startie.slack_id}'}})
     DETACH DELETE c
     RETURN id(s)
     """
 
+    print(query)
     result = store.query(query)
     print(f"result: {result}")
     startie_id = result[0]["id(s)"]
@@ -159,6 +161,8 @@ def sanitize_chunk(text):
     text = text.replace("'", "\\'")
     # Escape double quotes
     text = text.replace('"', '\\"')
+    # Escape backticks
+    text = text.replace("`", "\\`")
     # Escape backslashes
     text = text.replace("\\", "\\\\")
     # Escape newlines and carriage returns
