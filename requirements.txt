@@ -5,3 +5,5 @@ langchain_openai==0.1.8
 python-dotenv==1.0.1
 Requests==2.32.3
 slack_bolt==1.18.1
+neo4j==5.21.0
+
