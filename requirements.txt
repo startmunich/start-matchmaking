@@ -1,4 +1,7 @@
-langchain==0.1.14
-langchain_core==0.1.39
-langchain_openai==0.1.1
+langchain_community==0.2.4
+langchain_core==0.2.5
+langchain_experimental==0.0.60
+langchain_openai==0.1.8
 python-dotenv==1.0.1
+Requests==2.32.3
+slack_bolt==1.18.1

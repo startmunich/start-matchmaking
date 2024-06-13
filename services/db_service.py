@@ -21,17 +21,22 @@ NEO4J_URI = os.environ.get("NEO4J_URI")
 NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
 
+
 # Initialize the Neo4jVector store
-store = Neo4jVector.from_existing_graph(
-    embedding=OpenAIEmbeddings(),
-    url=NEO4J_URI,
-    username=NEO4J_USERNAME,
-    password=NEO4J_PASSWORD,
-    index_name="chunk_index",
-    node_label="Chunk",
-    text_node_properties=["text"],
-    embedding_node_property="embedding",
-)
+def load_vector_store():
+    return Neo4jVector.from_existing_graph(
+        embedding=OpenAIEmbeddings(),
+        url=NEO4J_URI,
+        username=NEO4J_USERNAME,
+        password=NEO4J_PASSWORD,
+        index_name="chunk_index",
+        node_label="Chunk",
+        text_node_properties=["text"],
+        embedding_node_property="embedding",
+    )
+
+
+store = load_vector_store()
 
 
 # Create a new chunk in the database
@@ -108,10 +113,16 @@ def update_startie(startie, chunks):
 def save_startie(startie, chunks):
     print("db_service | save_startie")
 
+    startie_id = None
+
     if find_startie_by_id(startie.slack_id):
-        return update_startie(startie, chunks)
+        startie_id = update_startie(startie, chunks)
     else:
-        return create_startie(startie, chunks)
+        startie_id = create_startie(startie, chunks)
+
+    global store
+    store = load_vector_store()
+    return startie_id
 
 
 # Find a Startie by their chunk
