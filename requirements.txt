@@ -6,4 +6,5 @@ python-dotenv==1.0.1
 Requests==2.32.3
 slack_bolt==1.18.1
 neo4j==5.21.0
+pypdf==4.2.0
 
