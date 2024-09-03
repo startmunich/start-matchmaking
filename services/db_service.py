@@ -193,6 +193,25 @@ def add_startie_by_cv(_id: str, cv_path: str):
 # Temporary session store -> in memory, replace either with Neo4j or Redis
 session_store = {}
 
+# Perform similarity search while preventing the user to get matched with themselves
+def similarity_search_excluding_user(query, config, k=1):
+    slack_id = config['configurable']['session_id']
+    print(f"db_service | similarity_search_excluding_user | query: {query}, slack_id: {slack_id}, k: {k}")
+    
+    # Perform the initial similarity search
+    all_matches = store.similarity_search_with_score(query, k=k+1)  # Get one extra match
+    
+    # Filter out the user's own chunks
+    filtered_matches = []
+    for match, score in all_matches:
+        startie_id = match.metadata.get('startie_id')
+        if startie_id != slack_id:
+            filtered_matches.append((match, score))
+            if len(filtered_matches) == k:
+                break
+    
+    return filtered_matches
+
 
 # Get the chat history for a session
 def get_session_history(session_id: str) -> BaseChatMessageHistory:

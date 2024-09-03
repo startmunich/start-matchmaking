@@ -3,6 +3,7 @@ from langchain_core.prompts import MessagesPlaceholder, ChatPromptTemplate
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_openai import ChatOpenAI
 from ai.prompts import router_prompt, add_user_prompt, conversation_prompt, update_user_prompt, search_query_prompt
+from model import startie
 from services import db_service
 
 llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
@@ -44,9 +45,11 @@ def route(context, config):
     elif "3" in result:
         print("route 3 -> search query")
         # TODO: Find the best match for the user
-        matches = db_service.store.similarity_search_with_score(context["user_input"], k=1)
+        # matches = db_service.store.similarity_search_with_score(context["user_input"], k=1) # Old version
+        matches = db_service.similarity_search_excluding_user(context["user_input"], config, k=1) 
+        print("config", config)
         context["matches"] = matches
-        print(context["matches"])
+        print("matches", context["matches"])
         return search_query_chain.invoke(context, config)
     elif "4" in result:
         print("route 4 -> conversation")
