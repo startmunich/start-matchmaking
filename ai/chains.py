@@ -61,10 +61,10 @@ def route(context, config):
 def on_message(message, say, cv_upload=None):
     print("chains | on_message")
 
-    user_input = message["text"] if message["text"] else "None"
+    user_input = message["text"]
 
     if not user_input and cv_upload:
-        user_input *= "CV uploaded"
+        user_input += "CV uploaded"
 
     context = {
         "user_exists": db_service.find_startie_by_id(message["user"]) is not [],
@@ -78,6 +78,10 @@ def on_message(message, say, cv_upload=None):
     print("context: ", context)
     print("config: ", config)
 
-    result = route(context, config)
-    if result and type(result) is str:
-        say(result)
+    try:
+        result = route(context, config)
+        if result and type(result) is str:
+            say(result)
+    except Exception as e:
+        print("Error: ", e)
+        say("Sorry, an error occurred. 😢 My admin has been notified.")
