@@ -15,9 +15,6 @@ idna==3.7
 jsonpatch==1.33
 jsonpointer==3.0.0
 langchain==0.1.14
-langchain-community==0.0.31
-langchain-core==0.1.39
-langchain-openai==0.1.1
 langchain-text-splitters==0.0.2
 langsmith==0.1.93
 marshmallow==3.21.3
@@ -44,12 +41,13 @@ typing-inspect==0.9.0
 typing_extensions==4.12.2
 urllib3==2.2.2
 yarl==1.9.4
-langchain_community==0.2.4
+langchain_community==0.2.16
 langchain_core==0.2.5
 langchain_experimental==0.0.60
 langchain_openai==0.1.8
 python-dotenv==1.0.1
 Requests==2.32.3
-slack_bolt==1.18.1
 neo4j==5.21.0
 pypdf==4.2.0
+surrealdb==0.3.2
+urllib3==2.2.2
