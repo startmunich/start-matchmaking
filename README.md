@@ -41,9 +41,12 @@ Contains data models used throughout the application:
 - `chunk.py`: Defines the Chunk class, representing a piece of CV content
 
 ### 7. cli_service.py
-A command-line interface for testing the bot's functionality without Slack integration.
+A command-line interface for testing the bot's functionality without Slack integration (not currently used).
 
 ## Setup and Running
 
 1. Install dependencies:
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
+
