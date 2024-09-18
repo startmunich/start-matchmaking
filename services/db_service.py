@@ -155,7 +155,7 @@ async def add_startie_by_cv(_id: str, cv_path: str):
             else:
                 startie_id = startie.slack_id
 
-            chunks = [Chunk(text=doc.page_content, startie_id=startie_id)]  # Only one chunk
+            chunks = [Chunk(text=docs.page_content, startie_id=startie_id)]  # Only one chunk
             await save_startie(startie, chunks)
             print("Thank you for uploading your CV!")  # Add feedback message
             return startie
