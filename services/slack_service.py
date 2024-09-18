@@ -27,17 +27,23 @@ async def on_message(message, say):
     if message.get("files", []):
         url_private_download = message["files"][0]["url_private_download"]
         print("URL Private:", url_private_download)
-        cv_upload = await db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
-        if cv_upload:
-            await say("Thanks for uploading your CV! I've processed it successfully.")
-        else:
-            await say("I received your CV, but there was an issue processing it. Please try again.")
-
-    await chains.on_message(message, say, cv_upload)
+        try:
+            cv_upload = await db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
+            if cv_upload:
+                await say("Thanks for uploading your CV! I've processed it successfully.")
+            else:
+                await say("I received your CV, but there was an issue processing it. Please try again.")
+        except Exception as e:
+            print(f"Error processing CV: {e}")
+            await say("There was an error processing your CV. Our team has been notified. Please try again later.")
+    
+    if message.get("text"):
+        await chains.on_message(message, say, cv_upload)
 
 @app.event("file_shared")
 async def handle_file_shared_events(body, logger):
     print("slack_service | handle_file_shared_events")
+    # You might want to process the file here as well
 
 async def start():
     print("slack_service | start")
