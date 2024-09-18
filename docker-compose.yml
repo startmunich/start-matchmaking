@@ -17,17 +17,20 @@ services:
          - NEO4J_URI=${NEO4J_URI}
          - NEO4J_USERNAME=${NEO4J_USERNAME}
          - NEO4J_PASSWORD=${NEO4J_PASSWORD}
-         - SURREALDB_URL=ws://surrealdb:8000/rpc
+         - SURREALDB_URL=ws://surrealdb:8080/rpc
          - SURREALDB_USERNAME=${SURREALDB_USERNAME}
          - SURREALDB_PASSWORD=${SURREALDB_PASSWORD}
 
    surrealdb:
       image: surrealdb/surrealdb:latest
       ports:
-         - '27017:8000'
+         - '8080:8080'
       volumes:
          - surrealdb-data:/data
-      command: start --log trace --user ${SURREALDB_USERNAME} --pass ${SURREALDB_PASSWORD} file:/data/database.db
+      environment:
+         - SURREAL_USER=${SURREALDB_USERNAME}
+         - SURREAL_PASS=${SURREALDB_PASSWORD}
+      command: start --bind 0.0.0.0:8080 file:///data/database.db
 
 volumes:
    surrealdb-data:
