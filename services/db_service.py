@@ -77,19 +77,33 @@ async def update_startie(startie, chunks):
     
     return startie.slack_id
 
+
 async def save_startie(startie, chunks):
     print("db_service | save_startie")
-    existing_startie = await find_startie_by_id(startie.slack_id)
-    
-    if existing_startie:
-        # Update existing startie with new chunks
-        for chunk in chunks:
-            await create_chunk(chunk)
+    existing_chunk = await find_chunk_by_startie_id(startie.slack_id)
+
+    if existing_chunk:
+        # Update existing chunk with new text
+        await store.aupdate_texts(existing_chunk.id, chunks[0].text)
     else:
-        # Create new startie if not exists
-        await create_startie(startie, chunks)
+        # Create new chunk if none exists
+        await create_chunk(chunks[0])  # Only create the first chunk
     
     return startie.slack_id
+
+# async def save_startie(startie, chunks):
+#     print("db_service | save_startie")
+#     existing_startie = await find_startie_by_id(startie.slack_id)
+    
+#     if existing_startie:
+#         # Update existing startie with new chunks
+#         for chunk in chunks:
+#             await create_chunk(chunk)
+#     else:
+#         # Create new startie if not exists
+#         await create_startie(startie, chunks)
+    
+#     return startie.slack_id
 
 # async def save_startie(startie, chunks):
 #     print("db_service | save_startie")
@@ -103,6 +117,13 @@ async def find_startie_by_id(slack_id):
     print(f"db_service | find_startie_by_id | {slack_id}")
     result = await db.query(f"SELECT * FROM startie WHERE slack_id = $slack_id", {
         "slack_id": slack_id
+    })
+    return result[0]['result'][0] if result and result[0]['result'] else None
+
+async def find_chunk_by_startie_id(startie_id):
+    print(f"db_service | find_chunk_by_startie_id | {startie_id}")
+    result = await db.query(f"SELECT * FROM chunks WHERE startie_id = $startie_id", {
+        "startie_id": startie_id
     })
     return result[0]['result'][0] if result and result[0]['result'] else None
 
@@ -130,12 +151,13 @@ async def add_startie_by_cv(_id: str, cv_path: str):
             # Find or create startie
             startie = await slack_service.find_startie_by_id(_id)
             if not startie:
-                startie_id = await create_startie(Startie(_id, None))  # Create a new startie if not yet in the DB
+                startie_id = await create_startie(Startie(_id, None))  # Create new startie
             else:
                 startie_id = startie.slack_id
 
-            chunks = [Chunk(text=doc.page_content, startie_id=startie_id) for doc in docs]
-            await save_startie(startie, chunks)  # Update startie with new chunks
+            chunks = [Chunk(text=doc.page_content, startie_id=startie_id)]  # Only one chunk
+            await save_startie(startie, chunks)
+            print("Thank you for uploading your CV!")  # Add feedback message
             return startie
 
         else:
