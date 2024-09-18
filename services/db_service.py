@@ -78,18 +78,18 @@ async def update_startie(startie, chunks):
     return startie.slack_id
 
 
-async def save_startie(startie, chunks):
-    print("db_service | save_startie")
-    existing_chunk = await find_chunk_by_startie_id(startie.slack_id)
+# async def save_startie(startie, chunks):
+#     print("db_service | save_startie")
+#     existing_chunk = await find_chunk_by_startie_id(startie.slack_id)
 
-    if existing_chunk:
-        # Update existing chunk with new text
-        await store.aupdate_texts(existing_chunk.id, chunks[0].text)
-    else:
-        # Create new chunk if none exists
-        await create_chunk(chunks[0])  # Only create the first chunk
+#     if existing_chunk:
+#         # Update existing chunk with new text
+#         await store.aupdate_texts(existing_chunk.id, chunks[0].text)
+#     else:
+#         # Create new chunk if none exists
+#         await create_chunk(chunks[0])  # Only create the first chunk
     
-    return startie.slack_id
+#     return startie.slack_id
 
 # async def save_startie(startie, chunks):
 #     print("db_service | save_startie")
@@ -105,13 +105,13 @@ async def save_startie(startie, chunks):
     
 #     return startie.slack_id
 
-# async def save_startie(startie, chunks):
-#     print("db_service | save_startie")
-#     existing_startie = await find_startie_by_id(startie.slack_id)
-#     if existing_startie:
-#         return await update_startie(startie, chunks)
-#     else:
-#         return await create_startie(startie, chunks)
+async def save_startie(startie, chunks):
+    print("db_service | save_startie")
+    existing_startie = await find_startie_by_id(startie.slack_id)
+    if existing_startie:
+        return await update_startie(startie, chunks)
+    else:
+        return await create_startie(startie, chunks)
 
 async def find_startie_by_id(slack_id):
     print(f"db_service | find_startie_by_id | {slack_id}")
