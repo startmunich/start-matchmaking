@@ -5,6 +5,7 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from ai import chains
 from model.startie import Startie
 from services import db_service
+import asyncio
 
 load_dotenv(override=True)
 
@@ -36,6 +37,16 @@ async def on_message(message, say):
         except Exception as e:
             print(f"Error processing CV: {e}")
             await say("There was an error processing your CV. Our team has been notified. Please try again later.")
+        
+        # Add a delay to ensure database operation completes
+        await asyncio.sleep(2)
+        
+        # Double-check if the CV was actually processed
+        startie = await db_service.find_startie_by_id(user_id)
+        if startie and await db_service.get_chunk_for_startie(startie.slack_id):
+            await say("Your CV has been successfully processed and stored in our database.")
+        else:
+            await say("It seems there was an issue storing your CV. Please try uploading again.")
     
     if message.get("text"):
         await chains.on_message(message, say, cv_upload)
