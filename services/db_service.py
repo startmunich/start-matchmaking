@@ -147,15 +147,21 @@ async def add_startie_by_cv(_id: str, cv_path: str):
             
             text_splitter = SemanticChunker(OpenAIEmbeddings())
             docs = text_splitter.create_documents([full_text])
-            
+
             # Find or create startie
             startie = await slack_service.find_startie_by_id(_id)
             if not startie:
-                startie_id = await create_startie(Startie(_id, None))  # Create new startie
+                # Check if startie creation is successful
+                startie_id = await create_startie(Startie(_id, None))
+                if not startie_id:  # Handle potential create_startie errors
+                    print("Failed to create startie. Uploading CV failed.")
+                    return None
+                else:
+                    startie = Startie(_id, startie_id)  # Create Startie object if successful
             else:
                 startie_id = startie.slack_id
 
-            chunks = [Chunk(text=docs.page_content, startie_id=startie_id)]  # Only one chunk
+            chunks = [Chunk(text=doc.page_content, startie_id=startie_id) for doc in docs]  # Only one chunk
             await save_startie(startie, chunks)
             print("Thank you for uploading your CV!")  # Add feedback message
             return startie
@@ -163,6 +169,43 @@ async def add_startie_by_cv(_id: str, cv_path: str):
         else:
             print("Failed to download the file.")
             return None
+
+# async def add_startie_by_cv(_id: str, cv_path: str):
+#     print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
+#     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+#     auth_header = {'Authorization': f'Bearer {slack_bot_token}'}
+
+#     with tempfile.TemporaryDirectory() as temp_dir:
+#         pdf_filename = cv_path.split('/')[-1]
+#         pdf_path = os.path.join(temp_dir, pdf_filename)
+#         response = requests.get(cv_path, headers=auth_header)
+
+#         with open(pdf_path, 'wb') as f:
+#             f.write(response.content)
+
+#         if os.path.exists(pdf_path):
+#             loader = PyPDFLoader(pdf_path)
+#             pages = loader.load_and_split()
+#             full_text = "\n".join([page.page_content for page in pages])
+            
+#             text_splitter = SemanticChunker(OpenAIEmbeddings())
+#             docs = text_splitter.create_documents([full_text])
+            
+#             # Find or create startie
+#             startie = await slack_service.find_startie_by_id(_id)
+#             if not startie:
+#                 startie_id = await create_startie(Startie(_id, None))  # Create new startie
+#             else:
+#                 startie_id = startie.slack_id
+
+#             chunks = [Chunk(text=docs.page_content, startie_id=startie_id)]  # Only one chunk
+#             await save_startie(startie, chunks)
+#             print("Thank you for uploading your CV!")  # Add feedback message
+#             return startie
+
+#         else:
+#             print("Failed to download the file.")
+#             return None
 
 # async def add_startie_by_cv(_id: str, cv_path: str):
 #     print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
