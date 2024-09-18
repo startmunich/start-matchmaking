@@ -14,6 +14,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_experimental.text_splitter import SemanticChunker
 from surrealdb import Surreal
 from model.chunk import Chunk
+from model.startie import Startie
 from services import slack_service
 
 # Read .env file
@@ -79,10 +80,24 @@ async def update_startie(startie, chunks):
 async def save_startie(startie, chunks):
     print("db_service | save_startie")
     existing_startie = await find_startie_by_id(startie.slack_id)
+    
     if existing_startie:
-        return await update_startie(startie, chunks)
+        # Update existing startie with new chunks
+        for chunk in chunks:
+            await create_chunk(chunk)
     else:
-        return await create_startie(startie, chunks)
+        # Create new startie if not exists
+        await create_startie(startie, chunks)
+    
+    return startie.slack_id
+
+# async def save_startie(startie, chunks):
+#     print("db_service | save_startie")
+#     existing_startie = await find_startie_by_id(startie.slack_id)
+#     if existing_startie:
+#         return await update_startie(startie, chunks)
+#     else:
+#         return await create_startie(startie, chunks)
 
 async def find_startie_by_id(slack_id):
     print(f"db_service | find_startie_by_id | {slack_id}")
@@ -112,14 +127,50 @@ async def add_startie_by_cv(_id: str, cv_path: str):
             text_splitter = SemanticChunker(OpenAIEmbeddings())
             docs = text_splitter.create_documents([full_text])
             
+            # Find or create startie
             startie = await slack_service.find_startie_by_id(_id)
-            chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
-            await save_startie(startie, chunks)
+            if not startie:
+                startie_id = await create_startie(Startie(_id, None))  # Create a new startie if not yet in the DB
+            else:
+                startie_id = startie.slack_id
+
+            chunks = [Chunk(text=doc.page_content, startie_id=startie_id) for doc in docs]
+            await save_startie(startie, chunks)  # Update startie with new chunks
             return startie
 
         else:
             print("Failed to download the file.")
             return None
+
+# async def add_startie_by_cv(_id: str, cv_path: str):
+#     print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
+#     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+#     auth_header = {'Authorization': f'Bearer {slack_bot_token}'}
+
+#     with tempfile.TemporaryDirectory() as temp_dir:
+#         pdf_filename = cv_path.split('/')[-1]
+#         pdf_path = os.path.join(temp_dir, pdf_filename)
+#         response = requests.get(cv_path, headers=auth_header)
+
+#         with open(pdf_path, 'wb') as f:
+#             f.write(response.content)
+
+#         if os.path.exists(pdf_path):
+#             loader = PyPDFLoader(pdf_path)
+#             pages = loader.load_and_split()
+#             full_text = "\n".join([page.page_content for page in pages])
+            
+#             text_splitter = SemanticChunker(OpenAIEmbeddings())
+#             docs = text_splitter.create_documents([full_text])
+            
+#             startie = await slack_service.find_startie_by_id(_id)
+#             chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
+#             await save_startie(startie, chunks)
+#             return startie
+
+#         else:
+#             print("Failed to download the file.")
+#             return None
 
 async def similarity_search_excluding_user(query, config, k=1):
     slack_id = config['configurable']['session_id']
