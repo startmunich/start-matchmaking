@@ -1,0 +1,29 @@
+version: '3'
+services:
+   app:
+      build: .
+      ports:
+         - '3000:3000'
+      depends_on:
+         - surrealdb
+      environment:
+         - OPENAI_API_KEY=${OPENAI_API_KEY}
+         - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+         - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+         - NEO4J_URI=${NEO4J_URI}
+         - NEO4J_USERNAME=${NEO4J_USERNAME}
+         - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+         - SURREALDB_URL=ws://surrealdb:8000/rpc
+         - SURREALDB_USERNAME=${SURREALDB_USERNAME}
+         - SURREALDB_PASSWORD=${SURREALDB_PASSWORD}
+
+   surrealdb:
+      image: surrealdb/surrealdb:latest
+      ports:
+         - '8000:8000'
+      volumes:
+         - surrealdb-data:/data
+      command: start --log trace --user ${SURREALDB_USERNAME} --pass ${SURREALDB_PASSWORD} file:/data/database.db
+
+volumes:
+   surrealdb-data:
