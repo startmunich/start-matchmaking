@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 from dotenv import load_dotenv
@@ -107,13 +108,26 @@ async def add_startie_by_cv(_id: str, cv_path: str):
         with open(pdf_path, 'wb') as f:
             f.write(response.content)
 
+        # if os.path.exists(pdf_path):
+        #     loader = PyPDFLoader(pdf_path)
+        #     pages = loader.load_and_split()
+        #     full_text = "\n".join([page.page_content for page in pages])
+            
+        #     text_splitter = SemanticChunker(OpenAIEmbeddings())
+        #     docs = text_splitter.create_documents([full_text])
+            
+        #     startie = await slack_service.find_startie_by_id(_id)
+        #     chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
+        #     await save_startie(startie, chunks)
+        #     return startie
+        
         if os.path.exists(pdf_path):
             loader = PyPDFLoader(pdf_path)
-            pages = loader.load_and_split()
+            pages = await asyncio.to_thread(loader.load_and_split)
             full_text = "\n".join([page.page_content for page in pages])
             
             text_splitter = SemanticChunker(OpenAIEmbeddings())
-            docs = text_splitter.create_documents([full_text])
+            docs = await asyncio.to_thread(text_splitter.create_documents, [full_text])
             
             startie = await slack_service.find_startie_by_id(_id)
             chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]

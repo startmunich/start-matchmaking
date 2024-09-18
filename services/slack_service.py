@@ -28,6 +28,10 @@ async def on_message(message, say):
         url_private_download = message["files"][0]["url_private_download"]
         print("URL Private:", url_private_download)
         cv_upload = await db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
+        if cv_upload:
+            await say("Thanks for uploading your CV! I've processed it successfully.")
+        else:
+            await say("I received your CV, but there was an issue processing it. Please try again.")
 
     await chains.on_message(message, say, cv_upload)
 
