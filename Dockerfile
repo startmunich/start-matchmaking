@@ -27,4 +27,5 @@ RUN while read requirement; do pip install --no-cache-dir -v $requirement; done 
 COPY . .
 
 # Specify the command to run your application
+EXPOSE 3000
 CMD ["python", "main.py"]
