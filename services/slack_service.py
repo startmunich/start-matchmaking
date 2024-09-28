@@ -29,24 +29,27 @@ async def on_message(message, say):
         url_private_download = message["files"][0]["url_private_download"]
         print("URL Private:", url_private_download)
         try:
+            # Process CV and create/update user in DB
             cv_upload = await db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
+            
             if cv_upload:
-                await say("Thanks for uploading your CV! I've processed it successfully.")
+                # Check if chunks were created for the user
+                chunks = await db_service.get_chunks_for_startie(user_id)
+                if chunks:
+                    await say("Thanks for uploading your CV! I've processed it successfully and stored it in our database.")
+                else:
+                    # If no chunks were created, retry the process
+                    cv_upload = await db_service.add_startie_by_cv(_id=user_id, cv_path=url_private_download)
+                    chunks = await db_service.get_chunks_for_startie(user_id)
+                    if chunks:
+                        await say("Thanks for uploading your CV! I've processed it successfully and stored it in our database.")
+                    else:
+                        await say("I received your CV, but there was an issue processing it. Our team has been notified. Please try again later.")
             else:
-                await say("I received your CV, but there was an issue processing it. Please try again.")
+                await say("I received your CV, but there was an issue processing it. Our team has been notified. Please try again later.")
         except Exception as e:
             print(f"Error processing CV: {e}")
             await say("There was an error processing your CV. Our team has been notified. Please try again later.")
-        
-        # Add a delay to ensure database operation completes
-        await asyncio.sleep(2)
-        
-        # Double-check if the CV was actually processed
-        startie = await db_service.find_startie_by_id(user_id)
-        if startie and await db_service.get_chunk_for_startie(startie.slack_id):
-            await say("Your CV has been successfully processed and stored in our database.")
-        else:
-            await say("It seems there was an issue storing your CV. Please try uploading again.")
     
     if message.get("text"):
         await chains.on_message(message, say, cv_upload)

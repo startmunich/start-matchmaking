@@ -137,6 +137,15 @@ async def add_startie_by_cv(_id: str, cv_path: str):
         else:
             print("Failed to download the file.")
             return None
+        
+
+async def get_chunks_for_startie(startie_id):
+    print(f"db_service | get_chunks_for_startie | {startie_id}")
+    result = await db.query(f"SELECT * FROM chunks WHERE startie_id = $startie_id", {
+        "startie_id": startie_id
+    })
+    return result[0]['result'] if result and result[0]['result'] else None
+
 
 async def similarity_search_excluding_user(query, config, k=1):
     slack_id = config['configurable']['session_id']
