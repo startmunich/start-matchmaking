@@ -6,7 +6,7 @@ from langchain_community.chat_message_histories.in_memory import ChatMessageHist
 from langchain_community.vectorstores.neo4j_vector import Neo4jVector
 from langchain_community.vectorstores import SurrealDBStore
 from langchain_core.chat_history import BaseChatMessageHistory
-from utils import download_temp
+from services.utils import download_temp
 import requests
 import os
 import tempfile
