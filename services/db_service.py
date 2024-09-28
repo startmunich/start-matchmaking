@@ -6,6 +6,7 @@ from langchain_community.chat_message_histories.in_memory import ChatMessageHist
 from langchain_community.vectorstores.neo4j_vector import Neo4jVector
 from langchain_community.vectorstores import SurrealDBStore
 from langchain_core.chat_history import BaseChatMessageHistory
+from utils import download_temp
 import requests
 import os
 import tempfile
@@ -63,29 +64,29 @@ async def create_startie(startie, chunks):
         "name": startie.name
     })
     startie_id = result[0]['id']
-    
+
     for chunk in chunks:
         await create_chunk(chunk)
-    
-    return startie_id
+
+    return startie
 
 async def update_startie(startie, chunks):
     print("db_service | update_startie")
     await store.adelete(where={"startie_id": startie.slack_id})
-    
+
     for chunk in chunks:
         await create_chunk(chunk)
-    
-    return startie.slack_id
+
+    return startie
 
 
-async def save_startie(startie, chunks):
+async def save_startie(_slack_id, chunks):
     print("db_service | save_startie")
-    existing_startie = await find_startie_by_id(startie.slack_id)
+    existing_startie = await find_startie_by_id(_slack_id)
     if existing_startie:
-        return await update_startie(startie, chunks)
+        return await update_startie(existing_startie, chunks)
     else:
-        return await create_startie(startie, chunks)
+        return await create_startie(existing_startie, chunks)
 
 async def find_startie_by_id(slack_id):
     print(f"db_service | find_startie_by_id | {slack_id}")
@@ -99,45 +100,37 @@ async def add_startie_by_cv(_id: str, cv_path: str):
     print(f"db_service | add_startie_by_cv | {_id}, {cv_path}")
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
     auth_header = {'Authorization': f'Bearer {slack_bot_token}'}
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        pdf_filename = cv_path.split('/')[-1]
-        pdf_path = os.path.join(temp_dir, pdf_filename)
-        response = requests.get(cv_path, headers=auth_header)
-
-        with open(pdf_path, 'wb') as f:
-            f.write(response.content)
+    pdf_path = await download_temp(cv_path, auth_header)
 
         # if os.path.exists(pdf_path):
         #     loader = PyPDFLoader(pdf_path)
         #     pages = loader.load_and_split()
         #     full_text = "\n".join([page.page_content for page in pages])
-            
+
         #     text_splitter = SemanticChunker(OpenAIEmbeddings())
         #     docs = text_splitter.create_documents([full_text])
-            
+
         #     startie = await slack_service.find_startie_by_id(_id)
         #     chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
         #     await save_startie(startie, chunks)
         #     return startie
-        
-        if os.path.exists(pdf_path):
-            loader = PyPDFLoader(pdf_path)
-            pages = await asyncio.to_thread(loader.load_and_split)
-            full_text = "\n".join([page.page_content for page in pages])
-            
-            text_splitter = SemanticChunker(OpenAIEmbeddings())
-            docs = await asyncio.to_thread(text_splitter.create_documents, [full_text])
-            
-            startie = await slack_service.find_startie_by_id(_id)
-            chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
-            await save_startie(startie, chunks)
-            return startie
 
-        else:
-            print("Failed to download the file.")
-            return None
-        
+    if os.path.exists(pdf_path):
+        loader = PyPDFLoader(pdf_path)
+        pages = await asyncio.to_thread(loader.load_and_split)
+        full_text = "\n".join([page.page_content for page in pages])
+
+        text_splitter = SemanticChunker(OpenAIEmbeddings())
+        docs = await asyncio.to_thread(text_splitter.create_documents, [full_text])
+
+        #startie = await slack_service.find_startie_by_id(_id)
+        chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
+        return await save_startie(_id, chunks)
+
+    else:
+        print("Failed to download the file.")
+        return None
+
 
 async def get_chunks_for_startie(startie_id):
     print(f"db_service | get_chunks_for_startie | {startie_id}")
@@ -150,14 +143,14 @@ async def get_chunks_for_startie(startie_id):
 async def similarity_search_excluding_user(query, config, k=1):
     slack_id = config['configurable']['session_id']
     print(f"db_service | similarity_search_excluding_user | query: {query}, slack_id: {slack_id}, k: {k}")
-    
+
     all_matches = await store.asimilarity_search_with_score(query, k=k+1)
-    
+
     filtered_matches = [
         (match, score) for match, score in all_matches
         if match.metadata.get('startie_id') != slack_id
     ][:k]
-    
+
     return filtered_matches
 
 session_store = {}
@@ -167,5 +160,3 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in session_store:
         session_store[session_id] = ChatMessageHistory()
     return session_store[session_id]
-
-
