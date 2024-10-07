@@ -81,4 +81,3 @@ async def start():
     print("slack_service | start")
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     await handler.start_async()
-
