@@ -69,7 +69,7 @@ async def define_indexes():
 
 
 async def create_chunk(chunk):
-    print("db_service | create_chunk")
+    print(f"db_service | create_chunk | {chunk}")
     return await store.aadd_texts(
         [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
     )
