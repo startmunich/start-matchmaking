@@ -69,14 +69,14 @@ async def define_indexes():
 
 
 async def create_chunk(chunk):
-    print(f"db_service | create_chunk | {chunk}")
+    print("db_service | create_chunk")
     return await store.aadd_texts(
         [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
     )
 
 
 async def create_startie(slack_startie: Startie, chunks):
-    print("db_service | create_startie")
+    print(f"db_service | create_startie | {len(chunks)}")
     # result = await db.create(
     #    "startie", {"slack_id": slack_startie.slack_id, "name": slack_startie.name}
     # )

@@ -21,7 +21,9 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 
 # Install Python dependencies one by one
-RUN while read requirement; do pip install --no-cache-dir -v $requirement; done < requirements.txt
+# RUN while read requirement; do pip install --no-cache-dir -v $requirement; done < requirements.txt
+
+RUN pip install -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .
