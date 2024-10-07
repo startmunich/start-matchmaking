@@ -8,6 +8,7 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from services.utils import download
 import os
 import tempfile
+import traceback
 
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader
@@ -69,7 +70,7 @@ async def define_indexes():
 
 
 async def create_chunk(chunk):
-    print("db_service | create_chunk")
+    print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
     return await store.aadd_texts(
         [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
     )
@@ -85,13 +86,12 @@ async def create_startie(slack_startie: Startie, chunks):
     else:
         print("Error creating startie inside create_startie")
 
-    # startie_id = result[0]["id"]
-
     try: 
         for chunk in chunks:
             await create_chunk(chunk)
     except Exception as e:
-        print(f"Error calling create_chunk from create_startie {e}")
+        print(f"Error calling create_chunk from create_startie: {type(e).__name__}, {str(e)}")
+        traceback.print_exc()
 
     return slack_startie.slack_id
 
