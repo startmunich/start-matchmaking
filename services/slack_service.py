@@ -28,6 +28,7 @@ async def on_message(message, say):
         url_private_download = message["files"][0]["url_private_download"]
         print("URL Private:", url_private_download)
         try:
+            print("Before add_startie_by_cv")
             # Process CV and create/update user in DB
             cv_upload = await db_service.add_startie_by_cv(
                 _id=user_id, cv_path=url_private_download
@@ -37,27 +38,28 @@ async def on_message(message, say):
                 # Check if chunks were created for the user
                 chunks = await db_service.get_chunks_for_startie(user_id)
                 if chunks:
+                    print("slack_service | chunk check successful")
                     await say(
                         "Thanks for uploading your CV! I've processed it successfully and stored it in our database."
                     )
                 else:
+                    print("slack_service | chunks not created. retrying...")
                     # If no chunks were created, retry the process
-                    print("Before add_startie_by_cv")
                     cv_upload = await db_service.add_startie_by_cv(
                         _id=user_id, cv_path=url_private_download
                     )
-                    print("After add_startie_by_cv")
-                    chunks = await db_service.get_chunks_for_startie(user_id)
-                    print("After get_chunks_for_startie")
+                    chunks = await db_service.get_chunks_for_startie(user_id) 
                     if chunks:
                         await say(
                             "Thanks for uploading your CV! I've processed it successfully and stored it in our database."
                         )
                     else:
+                        print("slack_service | CV upload failed on the retry")
                         await say(
                             "I received your CV, but there was an issue processing it. Our team has been notified. Please try again later."
                         )
             else:
+                print("slack_service | CV upload failed on the first time")
                 await say(
                     "I received your CV, but there was an issue processing it. Our team has been notified. Please try again later."
                 )

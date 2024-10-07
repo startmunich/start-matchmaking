@@ -76,11 +76,11 @@ async def create_chunk(chunk):
 
 
 async def create_startie(slack_startie: Startie, chunks):
-    print(f"db_service | create_startie | {len(chunks)}")
-    # result = await db.create(
-    #    "startie", {"slack_id": slack_startie.slack_id, "name": slack_startie.name}
-    # )
-    # startie_id = result[0]["id"]
+    print(f"db_service | create_startie | chunk length: {len(chunks)}")
+    result = await db.create(
+       "startie", {"slack_id": slack_startie.slack_id, "name": slack_startie.name}
+    )
+    startie_id = result[0]["id"]
 
     for chunk in chunks:
         await create_chunk(chunk)
@@ -89,8 +89,8 @@ async def create_startie(slack_startie: Startie, chunks):
 
 
 async def update_startie(slack_startie, chunks):
-    print(f"db_service | update_startie | {len(chunks)}")
-    # existing_chunks = await delete_chunks_for_startie(slack_startie.slack_id)
+    print(f"db_service | update_startie | chunk length: {len(chunks)}")
+    existing_chunks = await delete_chunks_for_startie(slack_startie.slack_id)
 
     for chunk in chunks:
         await create_chunk(chunk)
@@ -102,8 +102,10 @@ async def save_startie(slack_startie: Startie, chunks):
     print("db_service | save_startie")
     existing_startie = await find_startie_by_id(slack_startie.slack_id)
     if existing_startie:
+        print("Startie already exists. Updating entry...")
         return await update_startie(slack_startie, chunks)
     else:
+        print("Startie does not exist yet. Creating new entry...")
         return await create_startie(slack_startie, chunks)
 
 
