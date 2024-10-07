@@ -25,10 +25,11 @@ services:
       image: surrealdb/surrealdb:latest
       user: root
       ports:
-         - '8000:8000'
+         - '8080:8000'
       labels:
          - traefik.enable=true
          - traefik.http.routers.surrealdb.rule=Host(`db.matchmaking.startmunich.de`)
+         - traefik.http.services.surrealdb.loadbalancer.server.port=8000
       volumes:
          - surrealdb-data:/data
       environment:

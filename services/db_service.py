@@ -22,6 +22,8 @@ from services import slack_service
 # Read .env file
 load_dotenv(override=True)
 
+SURREALDB_USERNAME = os.environ.get("SURREALDB_USERNAME", "root")
+SURREALDB_PASSWORD = os.environ.get("SURREALDB_PASSWORD", "root")
 SURREALDB_URL = os.environ.get("SURREALDB_URL", "ws://localhost:8000/rpc")
 SURREALDB_EXTERNAL_URL = os.environ.get("SURREALDB_EXTERNAL_URL")
 
@@ -34,12 +36,6 @@ FINAL_SURREALDB_URL = get_final_surrealdb_url()
 
 # Use FINAL_SURREALDB_URL instead of SURREALDB_URL in your Surreal and SurrealDBStore initializations
 db = Surreal(FINAL_SURREALDB_URL)
-
-SURREALDB_USERNAME = os.environ.get("SURREALDB_USERNAME", "root")
-SURREALDB_PASSWORD = os.environ.get("SURREALDB_PASSWORD", "root")
-
-# Initialize SurrealDB client
-db = Surreal(SURREALDB_URL)
 
 # Initialize the SurrealDBStore for vector operations
 store = SurrealDBStore(
