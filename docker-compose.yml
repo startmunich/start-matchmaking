@@ -16,7 +16,7 @@ services:
          - NEO4J_URI=${NEO4J_URI}
          - NEO4J_USERNAME=${NEO4J_USERNAME}
          - NEO4J_PASSWORD=${NEO4J_PASSWORD}
-         - SURREALDB_URL=ws://surrealdb:8080/rpc
+         - SURREALDB_URL=ws://surrealdb:8000/rpc
          - SURREALDB_EXTERNAL_URL=${SURREALDB_EXTERNAL_URL}
          - SURREALDB_USERNAME=${SURREALDB_USERNAME}
          - SURREALDB_PASSWORD=${SURREALDB_PASSWORD}
@@ -25,16 +25,16 @@ services:
       image: surrealdb/surrealdb:latest
       user: root
       ports:
-         - '8081:8080'
+         - '8000:8000'
       labels:
          - traefik.enable=true
-         - traefik.http.routers.surrealdb.rule=Host(`https://db.matchmaking.startmunich.de`)
+         - traefik.http.routers.surrealdb.rule=Host(`db.matchmaking.startmunich.de`)
       volumes:
          - surrealdb-data:/data
       environment:
          - SURREAL_USER=${SURREALDB_USERNAME}
          - SURREAL_PASS=${SURREALDB_PASSWORD}
-      command: start --bind 0.0.0.0:8080 file:///data/database.db
+      command: start --bind 0.0.0.0:8000 --user ${SURREALDB_USERNAME} --pass ${SURREALDB_PASSWORD} file:///data/database.db
 
 volumes:
    surrealdb-data:
