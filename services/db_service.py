@@ -71,9 +71,13 @@ async def define_indexes():
 
 async def create_chunk(chunk):
     print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
-    return await store.aadd_texts(
+    result = await store.aadd_texts(
         [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
     )
+    print(f"db_service | create_chunk | result: {result}")
+    if not result or len(result) == 0:
+        raise ValueError("No result returned from store.aadd_texts inside create_chunk")
+    return result[0]["id"] if isinstance(result[0], dict) and "id" in result[0] else result[0]
 
 
 async def create_startie(slack_startie: Startie, chunks):
@@ -88,7 +92,8 @@ async def create_startie(slack_startie: Startie, chunks):
 
     try: 
         for chunk in chunks:
-            await create_chunk(chunk)
+            chunk_result = await create_chunk(chunk)
+            print(f"db_service | create_startie | chunk created: {chunk_result}")
     except Exception as e:
         print(f"Error calling create_chunk from create_startie: {type(e).__name__}, {str(e)}")
         traceback.print_exc()
