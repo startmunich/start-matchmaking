@@ -80,10 +80,18 @@ async def create_startie(slack_startie: Startie, chunks):
     result = await db.create(
        "startie", {"slack_id": slack_startie.slack_id, "name": slack_startie.name}
     )
-    startie_id = result[0]["id"]
+    if result:
+        print(f"Startie created successfully inside create_startie: {result}")
+    else:
+        print("Error creating startie inside create_startie")
 
-    for chunk in chunks:
-        await create_chunk(chunk)
+    # startie_id = result[0]["id"]
+
+    try: 
+        for chunk in chunks:
+            await create_chunk(chunk)
+    except Exception as e:
+        print(f"Error calling create_chunk from create_startie {e}")
 
     return slack_startie.slack_id
 
