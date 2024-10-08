@@ -15,6 +15,7 @@ import pypdf
 import requests
 import slack_bolt
 import surrealdb
+from services.custom_surrealdb_store import CustomSurrealDBStore
 from services.utils import download
 import os
 import tempfile
@@ -66,7 +67,7 @@ FINAL_SURREALDB_URL = get_final_surrealdb_url()
 db = Surreal(FINAL_SURREALDB_URL)
 
 # Initialize the SurrealDBStore for vector operations
-store = SurrealDBStore(
+store = CustomSurrealDBStore(
     dburl=FINAL_SURREALDB_URL,
     embedding_function=OpenAIEmbeddings(),
     db_user=SURREALDB_USERNAME,
@@ -107,11 +108,16 @@ async def create_chunk(chunk):
             elif isinstance(result[0], str):
                 return result[0]
         elif isinstance(result, dict):
-            return result.get("id")
-        else:
-            print(f"Unexpected result type: {type(result)}")
-            # If we can't find an ID, return a string representation of the result
-            return str(result)
+            # Handle the case where result is a single dictionary
+            if "id" in result:
+                return result["id"]
+            elif result.get("embedding") and result.get("metadata"):
+                # This matches the structure we saw in your DB
+                return result.get("id") or str(result)
+        
+        print(f"Unexpected result type: {type(result)}")
+        # If we can't find an ID, return a string representation of the result
+        return str(result)
     except Exception as e:
         print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
         traceback.print_exc()
