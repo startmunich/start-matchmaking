@@ -94,13 +94,28 @@ async def define_indexes():
 
 async def create_chunk(chunk):
     print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
-    result = await store.aadd_texts(
-        [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
-    )
-    print(f"db_service | create_chunk | result: {result}")
-    if not result or len(result) == 0:
-        raise ValueError("No result returned from store.aadd_texts inside create_chunk")
-    return result[0]["id"] if isinstance(result[0], dict) and "id" in result[0] else result[0]
+    try:
+        result = await store.aadd_texts(
+            [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
+        )
+        print(f"db_service | create_chunk | raw result: {result}")
+        print(f"db_service | create_chunk | result type: {type(result)}")
+        if isinstance(result, list):
+            print(f"db_service | create_chunk | first element type: {type(result[0])}")
+        
+        if not result or len(result) == 0:
+            raise ValueError("No result returned from store.aadd_texts inside create_chunk")
+        
+        if isinstance(result[0], dict):
+            return result[0].get("id")
+        elif isinstance(result[0], str):
+            return result[0]
+        else:
+            raise ValueError(f"Unexpected result type: {type(result[0])}")
+    except Exception as e:
+        print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
+        traceback.print_exc()
+        raise
 
 
 async def create_startie(slack_startie: Startie, chunks):
@@ -113,23 +128,37 @@ async def create_startie(slack_startie: Startie, chunks):
     else:
         print("Error creating startie inside create_startie")
 
-    try: 
-        for chunk in chunks:
+    created_chunks = []
+    for chunk in chunks:
+        try:
             chunk_result = await create_chunk(chunk)
+            created_chunks.append(chunk_result)
             print(f"db_service | create_startie | chunk created: {chunk_result}")
-    except Exception as e:
-        print(f"Error calling create_chunk from create_startie: {type(e).__name__}, {str(e)}")
-        traceback.print_exc()
+        except Exception as e:
+            print(f"Error calling create_chunk from create_startie: {type(e).__name__}, {str(e)}")
+            traceback.print_exc()
+
+    if not created_chunks:
+        raise ValueError("No chunks were successfully created")
 
     return slack_startie.slack_id
 
 
 async def update_startie(slack_startie, chunks):
     print(f"db_service | update_startie | chunk length: {len(chunks)}")
-    existing_chunks = await delete_chunks_for_startie(slack_startie.slack_id)
+    await delete_chunks_for_startie(slack_startie.slack_id)
 
+    created_chunks = []
     for chunk in chunks:
-        await create_chunk(chunk)
+        try:
+            chunk_result = await create_chunk(chunk)
+            created_chunks.append(chunk_result)
+        except Exception as e:
+            print(f"Error creating chunk in update_startie: {type(e).__name__}, {str(e)}")
+            traceback.print_exc()
+
+    if not created_chunks:
+        raise ValueError("No chunks were successfully updated")
 
     return slack_startie.slack_id
 
