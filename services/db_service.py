@@ -1,10 +1,20 @@
 import asyncio
+import sys
 
 from dotenv import load_dotenv
+import dotenv
+import langchain_community
 from langchain_community.chat_message_histories.in_memory import ChatMessageHistory
 from langchain_community.vectorstores.neo4j_vector import Neo4jVector
 from langchain_community.vectorstores import SurrealDBStore
+import langchain_core
 from langchain_core.chat_history import BaseChatMessageHistory
+import langchain_experimental
+import langchain_openai
+import pypdf
+import requests
+import slack_bolt
+import surrealdb
 from services.utils import download
 import os
 import tempfile
@@ -17,6 +27,19 @@ from surrealdb import Surreal
 from model.chunk import Chunk
 from model.startie import Startie
 from services import slack_service
+
+# Compare local and production versions
+print(f"Python version: {sys.version}")
+print(f"Langchain community version: {langchain_community.__version__}")
+print(f"Langchain core version: {langchain_core.__version__}")
+print(f"Langchain experimental version: {langchain_experimental.__version__}")
+# print(f"Langchain OpenAI version: {langchain_openai.version}")
+# print(f"python-dotenv version: {dotenv.__version__}")
+# print(f"Langchain OpenAI version: {langchain_openai.utils.utils.check_package_version}")
+print(f"Requests version: {requests.__version__}")
+# print(f"Slack Bolt version: {slack_bolt.version}")
+# print(f"SurrealDB Python client version: {surrealdb.__version__}")
+print(f"PyPDF version: {pypdf.__version__}")
 
 # Read .env file
 load_dotenv(override=True)

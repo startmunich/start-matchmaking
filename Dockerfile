@@ -1,5 +1,4 @@
-# Use a more robust Python image that includes build tools
-FROM python:3.9
+FROM python:3.12.4
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -28,6 +27,12 @@ RUN pip install -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
+# Add version logging
+RUN echo "print('Python version:', __import__('sys').version)" > version_check.py
+RUN echo "print('Installed packages:')" >> version_check.py
+RUN echo "for package in __import__('pkg_resources').working_set: print(f'{package.key}=={package.version}')" >> version_check.py
+
 # Specify the command to run your application
 EXPOSE 3000
-CMD ["python", "main.py"]
+CMD ["sh", "-c", "python version_check.py && python main.py"]
+# CMD ["python", "main.py"]
