@@ -31,6 +31,8 @@ COPY . .
 RUN echo "print('Python version:', __import__('sys').version)" > version_check.py
 RUN echo "print('Installed packages:')" >> version_check.py
 RUN echo "for package in __import__('pkg_resources').working_set: print(f'{package.key}=={package.version}')" >> version_check.py
+RUN echo "import os, subprocess" >> version_check.py
+RUN echo "print('SurrealDB version:', subprocess.check_output(['surreal', 'version']).decode().strip())" >> version_check.py
 
 # Specify the command to run your application
 EXPOSE 3000

@@ -22,7 +22,7 @@ services:
          - SURREALDB_PASSWORD=${SURREALDB_PASSWORD}
 
    surrealdb:
-      image: surrealdb/surrealdb:1.5.3
+      image: surrealdb/surrealdb:latest
       user: root
       ports:
          - '9999:8000'
