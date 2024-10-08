@@ -10,11 +10,8 @@ from langchain_community.vectorstores import SurrealDBStore
 import langchain_core
 from langchain_core.chat_history import BaseChatMessageHistory
 import langchain_experimental
-import langchain_openai
 import pypdf
 import requests
-import slack_bolt
-import surrealdb
 from services.custom_surrealdb_store import CustomSurrealDBStore
 from services.utils import download
 import os
@@ -34,12 +31,7 @@ print(f"Python version: {sys.version}")
 print(f"Langchain community version: {langchain_community.__version__}")
 print(f"Langchain core version: {langchain_core.__version__}")
 print(f"Langchain experimental version: {langchain_experimental.__version__}")
-# print(f"Langchain OpenAI version: {langchain_openai.version}")
-# print(f"python-dotenv version: {dotenv.__version__}")
-# print(f"Langchain OpenAI version: {langchain_openai.utils.utils.check_package_version}")
 print(f"Requests version: {requests.__version__}")
-# print(f"Slack Bolt version: {slack_bolt.version}")
-# print(f"SurrealDB Python client version: {surrealdb.__version__}")
 print(f"PyPDF version: {pypdf.__version__}")
 
 # Read .env file
@@ -112,7 +104,7 @@ async def create_chunk(chunk):
             if "id" in result:
                 return result["id"]
             elif result.get("embedding") and result.get("metadata"):
-                # This matches the structure we saw in your DB
+                # This matches the structure in the DB
                 return result.get("id") or str(result)
         
         print(f"Unexpected result type: {type(result)}")
@@ -122,37 +114,7 @@ async def create_chunk(chunk):
         print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
         traceback.print_exc()
         return None
-
-    # print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
-    # try:
-    #     result = await store.aadd_texts(
-    #         [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
-    #     )
-    #     print(f"db_service | create_chunk | raw result: {result}")
-    #     print(f"db_service | create_chunk | result type: {type(result)}")
-        
-    #     if not result:
-    #         raise ValueError("Empty result from store.aadd_texts")
-        
-    #     if isinstance(result, list):
-    #         if len(result) == 0:
-    #             raise ValueError("Empty list returned from store.aadd_texts")
-    #         print(f"db_service | create_chunk | first element type: {type(result[0])}")
-    #         if isinstance(result[0], str):
-    #             return result[0]
-    #         elif isinstance(result[0], dict):
-    #             return result[0].get("id")
-    #         else:
-    #             raise ValueError(f"Unexpected type in result list: {type(result[0])}")
-    #     elif isinstance(result, dict):
-    #         return result.get("id")
-    #     else:
-    #         raise ValueError(f"Unexpected result type: {type(result)}")
-    # except Exception as e:
-    #     print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
-    #     traceback.print_exc()
-    #     raise
-
+    
 
 async def create_startie(slack_startie: Startie, chunks):
     print(f"db_service | create_startie | chunk length: {len(chunks)}")
@@ -224,19 +186,6 @@ async def add_startie_by_cv(_id: str, cv_path: str):
     with tempfile.TemporaryDirectory() as temp_dir:
         os.makedirs(temp_dir, exist_ok=True)
         pdf_path = await download(cv_path, temp_dir, auth_header)
-
-        # if os.path.exists(pdf_path):
-        #     loader = PyPDFLoader(pdf_path)
-        #     pages = loader.load_and_split()
-        #     full_text = "\n".join([page.page_content for page in pages])
-
-        #     text_splitter = SemanticChunker(OpenAIEmbeddings())
-        #     docs = text_splitter.create_documents([full_text])
-
-        #     startie = await slack_service.find_startie_by_id(_id)
-        #     chunks = [Chunk(text=doc.page_content, startie_id=_id) for doc in docs]
-        #     await save_startie(startie, chunks)
-        #     return startie
 
         if os.path.exists(pdf_path):
             loader = PyPDFLoader(pdf_path)
