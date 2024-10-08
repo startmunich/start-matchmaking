@@ -101,24 +101,16 @@ async def create_chunk(chunk):
         print(f"db_service | create_chunk | raw result: {result}")
         print(f"db_service | create_chunk | result type: {type(result)}")
         
-        if not result:
-            return None
-        
-        if isinstance(result, list):
-            if len(result) == 0:
-                return None
-            print(f"db_service | create_chunk | first element type: {type(result[0])}")
-            if isinstance(result[0], str):
-                return result[0]
-            elif isinstance(result[0], dict):
+        if isinstance(result, list) and len(result) > 0:
+            if isinstance(result[0], dict):
                 return result[0].get("id")
-            else:
-                print(f"Unexpected type in result list: {type(result[0])}")
-                return str(result[0])
+            elif isinstance(result[0], str):
+                return result[0]
         elif isinstance(result, dict):
             return result.get("id")
         else:
             print(f"Unexpected result type: {type(result)}")
+            # If we can't find an ID, return a string representation of the result
             return str(result)
     except Exception as e:
         print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
