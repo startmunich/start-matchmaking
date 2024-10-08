@@ -40,7 +40,10 @@ async def on_message(message, say):
                     "Thanks for uploading your CV! I've processed it successfully and stored it in our database."
                 )
             else:
-                raise ValueError("No chunks created after CV upload")
+                print("slack_service | No chunks found after CV upload")
+                await say(
+                    "Your CV was received, but there might have been an issue processing it. Our team will look into it."
+                )
 
         except Exception as e:
             print(f"Error processing CV: {type(e).__name__}, {str(e)}")

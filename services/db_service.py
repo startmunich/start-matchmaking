@@ -93,27 +93,37 @@ async def define_indexes():
 
 
 async def create_chunk(chunk):
-        print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
-        try:
-            # Use add_texts instead of aadd_texts
-            result = await asyncio.to_thread(store.add_texts, [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
+    print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
+    try:
+        result = await store.aadd_texts(
+            [chunk.text], metadatas=[{"startie_id": chunk.startie_id}]
         )
-            print(f"db_service | create_chunk | raw result: {result}")
-            print(f"db_service | create_chunk | result type: {type(result)}")
-            
-            if not result:
-                print("Empty result from store.add_texts")
-                return None
-            
-            if isinstance(result, list) and len(result) > 0:
-                return result[0]
-            else:
-                print(f"Unexpected result type: {type(result)}")
-                return str(result)
-        except Exception as e:
-            print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
-            traceback.print_exc()
+        print(f"db_service | create_chunk | raw result: {result}")
+        print(f"db_service | create_chunk | result type: {type(result)}")
+        
+        if not result:
             return None
+        
+        if isinstance(result, list):
+            if len(result) == 0:
+                return None
+            print(f"db_service | create_chunk | first element type: {type(result[0])}")
+            if isinstance(result[0], str):
+                return result[0]
+            elif isinstance(result[0], dict):
+                return result[0].get("id")
+            else:
+                print(f"Unexpected type in result list: {type(result[0])}")
+                return str(result[0])
+        elif isinstance(result, dict):
+            return result.get("id")
+        else:
+            print(f"Unexpected result type: {type(result)}")
+            return str(result)
+    except Exception as e:
+        print(f"Error in create_chunk: {type(e).__name__}, {str(e)}")
+        traceback.print_exc()
+        return None
 
     # print(f"db_service | create_chunk | startie_id: {chunk.startie_id}, text length: {len(chunk.text)}")
     # try:
@@ -158,14 +168,12 @@ async def create_startie(slack_startie: Startie, chunks):
 
     created_chunks = []
     for chunk in chunks:
-        try:
-            chunk_result = await create_chunk(chunk)
-            if chunk_result:
-                created_chunks.append(chunk_result)
-                print(f"db_service | create_startie | chunk created: {chunk_result}")
-        except Exception as e:
-            print(f"Error calling create_chunk from create_startie: {type(e).__name__}, {str(e)}")
-            traceback.print_exc()
+        chunk_result = await create_chunk(chunk)
+        if chunk_result:
+            created_chunks.append(chunk_result)
+            print(f"db_service | create_startie | chunk created: {chunk_result}")
+        else:
+            print("db_service | create_startie | failed to create chunk")
 
     if not created_chunks:
         print("Warning: No chunks were successfully created")
@@ -179,14 +187,12 @@ async def update_startie(slack_startie, chunks):
 
     created_chunks = []
     for chunk in chunks:
-        try:
-            chunk_result = await create_chunk(chunk)
-            if chunk_result:
-                created_chunks.append(chunk_result)
-                print(f"db_service | update_startie | chunk created: {chunk_result}")
-        except Exception as e:
-            print(f"Error creating chunk in update_startie: {type(e).__name__}, {str(e)}")
-            traceback.print_exc()
+        chunk_result = await create_chunk(chunk)
+        if chunk_result:
+            created_chunks.append(chunk_result)
+            print(f"db_service | update_startie | chunk created: {chunk_result}")
+        else:
+            print("db_service | update_startie | failed to create chunk")
 
     if not created_chunks:
         print("Warning: No chunks were successfully updated")
